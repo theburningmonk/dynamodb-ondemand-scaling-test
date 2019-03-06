@@ -1,0 +1,21 @@
+{
+    "name": "dynamodb-ondemand-scaling",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "aws-sdk": "^2.415.0",
+        "bluebird": "^3.5.3",
+        "lodash": "^4.17.11",
+        "uuid": "^3.3.2"
+    },
+    "devDependencies": {
+        "serverless-pseudo-parameters": "^2.4.0",
+        "serverless-step-functions": "^1.13.0"
+    }
+}
