@@ -13,56 +13,27 @@ provider:
       Action: lambda:InvokeFunction
       Resource:
         - arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
-        - arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
     - Effect: Allow
       Action: dynamodb:BatchWriteItem
-      Resource: 
-        - Fn::GetAtt: [Linear100, Arn]
-        - Fn::GetAtt: [Linear200, Arn]
-        - Fn::GetAtt: [Linear300, Arn]
-        - Fn::GetAtt: [Linear500, Arn]
-        - Fn::GetAtt: [Linear700, Arn]
-        - Fn::GetAtt: [Linear900, Arn]
-        - Fn::GetAtt: [Linear1100, Arn]
-        - Fn::GetAtt: [Linear1300, Arn]
-        - Fn::GetAtt: [Linear1500, Arn]
-        - Fn::GetAtt: [Linear1750, Arn]
-        - Fn::GetAtt: [Linear2000, Arn]
-        - Fn::GetAtt: [Linear2500, Arn]
-        - Fn::GetAtt: [Linear3000, Arn]
-        - Fn::GetAtt: [HeadHeavy100, Arn]
-        - Fn::GetAtt: [HeadHeavy200, Arn]
-        - Fn::GetAtt: [HeadHeavy300, Arn]
-        - Fn::GetAtt: [HeadHeavy500, Arn]
-        - Fn::GetAtt: [HeadHeavy700, Arn]
-        - Fn::GetAtt: [HeadHeavy900, Arn]
-        - Fn::GetAtt: [HeadHeavy1100, Arn]
-        - Fn::GetAtt: [HeadHeavy1300, Arn]
-        - Fn::GetAtt: [HeadHeavy1500, Arn]
-        - Fn::GetAtt: [HeadHeavy1750, Arn]
-        - Fn::GetAtt: [HeadHeavy2000, Arn]
-        - Fn::GetAtt: [HeadHeavy2500, Arn]
-        - Fn::GetAtt: [HeadHeavy3000, Arn]
+      Resource: "*"
 
 functions:
   generate-linear-load:
     handler: functions/generate-linear-load.handler
     timeout: 900
 
-  generate-head-heavy-load:
-    handler: functions/generate-head-heavy-load.handler
-    timeout: 900
-
 stepFunctions:
   stateMachines:
     # needs a payload like this
     # {
-    #   "recursionLeft": 1,
-    #   "trough": 5,
-    #   "rampUpAt": 3,
-    #   "peakAt": 8,
-    #   "rampDownAt": 10,
-    #   "holdingAt": 13
+    #   "tableName": "my-table-name",
+    #   "recursionLeft": 1, <- 15 mins, if you ned to run for longer, up this
+    #   "peak": 10000,    <- this is the peak per function, total peak = this x 10
+    #   "trough": 1,
+    #   "rampUpAt": 1,    <- ramp up at 1 min mark
+    #   "peakAt": 2,      <- reach peak at 2 min mark
+    #   "rampDownAt": 10, <- stay at peak, and then ramp down at 10 min mark
+    #   "holdingAt": 13   <- finish ramp down and hold at trough at 13 min mark
     # }
     linearTest:
       name: dynamodb-ondemand-linear-test
@@ -71,753 +42,65 @@ stepFunctions:
         States:
           StartTests:
             Type: Parallel
-            Branches:
-              - StartAt: TargetLinear100
+            Branches:              
+              - StartAt: GenerateLoad1
                 States:
-                  TargetLinear100: 
-                    Type: Pass
-                    Result: ondemand-linear-100
-                    ResultPath: $.tableName                      
-                    Next: SetPeak100
-                  SetPeak100:
-                    Type: Pass
-                    Result: 100
-                    ResultPath: $.peak
-                    Next: TestLinear100
-                  TestLinear100:
+                  GenerateLoad1:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear200
+              - StartAt: GenerateLoad2
                 States:
-                  TargetLinear200: 
-                    Type: Pass
-                    Result: ondemand-linear-200
-                    ResultPath: $.tableName                      
-                    Next: SetPeak200
-                  SetPeak200:
-                    Type: Pass
-                    Result: 200
-                    ResultPath: $.peak
-                    Next: TestLinear200
-                  TestLinear200:
+                  GenerateLoad2:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear300
+              - StartAt: GenerateLoad3
                 States:
-                  TargetLinear300: 
-                    Type: Pass
-                    Result: ondemand-linear-300
-                    ResultPath: $.tableName                      
-                    Next: SetPeak300
-                  SetPeak300:
-                    Type: Pass
-                    Result: 300
-                    ResultPath: $.peak
-                    Next: TestLinear300
-                  TestLinear300:
+                  GenerateLoad3:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear500
+              - StartAt: GenerateLoad4
                 States:
-                  TargetLinear500: 
-                    Type: Pass
-                    Result: ondemand-linear-500
-                    ResultPath: $.tableName                      
-                    Next: SetPeak500
-                  SetPeak500:
-                    Type: Pass
-                    Result: 500
-                    ResultPath: $.peak
-                    Next: TestLinear500
-                  TestLinear500:
+                  GenerateLoad4:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear700
+              - StartAt: GenerateLoad5
                 States:
-                  TargetLinear700: 
-                    Type: Pass
-                    Result: ondemand-linear-700
-                    ResultPath: $.tableName                      
-                    Next: SetPeak700
-                  SetPeak700:
-                    Type: Pass
-                    Result: 700
-                    ResultPath: $.peak
-                    Next: TestLinear700
-                  TestLinear700:
+                  GenerateLoad5:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear900
+              - StartAt: GenerateLoad6
                 States:
-                  TargetLinear900: 
-                    Type: Pass
-                    Result: ondemand-linear-900
-                    ResultPath: $.tableName                      
-                    Next: SetPeak900
-                  SetPeak900:
-                    Type: Pass
-                    Result: 900
-                    ResultPath: $.peak
-                    Next: TestLinear900
-                  TestLinear900:
+                  GenerateLoad6:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear1100
+              - StartAt: GenerateLoad7
                 States:
-                  TargetLinear1100: 
-                    Type: Pass
-                    Result: ondemand-linear-1100
-                    ResultPath: $.tableName                      
-                    Next: SetPeak1100
-                  SetPeak1100:
-                    Type: Pass
-                    Result: 1100
-                    ResultPath: $.peak
-                    Next: TestLinear1100
-                  TestLinear1100:
+                  GenerateLoad7:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear1300
+              - StartAt: GenerateLoad8
                 States:
-                  TargetLinear1300: 
-                    Type: Pass
-                    Result: ondemand-linear-1300
-                    ResultPath: $.tableName
-                    Next: SetPeak1300
-                  SetPeak1300:
-                    Type: Pass
-                    Result: 1300
-                    ResultPath: $.peak
-                    Next: TestLinear1300
-                  TestLinear1300:
+                  GenerateLoad8:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear1500
+              - StartAt: GenerateLoad9
                 States:
-                  TargetLinear1500: 
-                    Type: Pass
-                    Result: ondemand-linear-1500
-                    ResultPath: $.tableName
-                    Next: SetPeak1500
-                  SetPeak1500:
-                    Type: Pass
-                    Result: 1500
-                    ResultPath: $.peak
-                    Next: TestLinear1500
-                  TestLinear1500:
+                  GenerateLoad9:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
-              - StartAt: TargetLinear1750
+              - StartAt: GenerateLoad10
                 States:
-                  TargetLinear1750: 
-                    Type: Pass
-                    Result: ondemand-linear-1750
-                    ResultPath: $.tableName
-                    Next: SetPeak1750
-                  SetPeak1750:
-                    Type: Pass
-                    Result: 1750
-                    ResultPath: $.peak
-                    Next: TestLinear1750
-                  TestLinear1750:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
-                    End: true
-              - StartAt: TargetLinear2000
-                States:
-                  TargetLinear2000: 
-                    Type: Pass
-                    Result: ondemand-linear-2000
-                    ResultPath: $.tableName
-                    Next: SetPeak2000
-                  SetPeak2000:
-                    Type: Pass
-                    Result: 2000
-                    ResultPath: $.peak
-                    Next: TestLinear2000
-                  TestLinear2000:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
-                    End: true
-              - StartAt: TargetLinear2500
-                States:
-                  TargetLinear2500: 
-                    Type: Pass
-                    Result: ondemand-linear-2500
-                    ResultPath: $.tableName
-                    Next: SetPeak2500
-                  SetPeak2500:
-                    Type: Pass
-                    Result: 2500
-                    ResultPath: $.peak
-                    Next: TestLinear2500
-                  TestLinear2500:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
-                    End: true
-              - StartAt: TargetLinear3000
-                States:
-                  TargetLinear3000: 
-                    Type: Pass
-                    Result: ondemand-linear-3000
-                    ResultPath: $.tableName
-                    Next: SetPeak3000
-                  SetPeak3000:
-                    Type: Pass
-                    Result: 3000
-                    ResultPath: $.peak
-                    Next: TestLinear3000
-                  TestLinear3000:
+                  GenerateLoad10:
                     Type: Task
                     Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-linear-load
                     End: true
             End: true
-
-    # needs a payload like this
-    # {
-    #   "recursionLeft": 1,
-    #   "trough": 5,
-    #   "rampUpAt": 3,
-    #   "peakAt": 4,
-    #   "holdingAt": 10
-    # }
-    headHeavyTest:
-      name: dynamodb-ondemand-head-heavy-test
-      definition:
-        StartAt: StartTests
-        States:
-          StartTests:
-            Type: Parallel
-            Branches:
-              - StartAt: TargetHeadHeavy100
-                States:
-                  TargetHeadHeavy100: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-100
-                    ResultPath: $.tableName                      
-                    Next: SetPeak100
-                  SetPeak100:
-                    Type: Pass
-                    Result: 100
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy100
-                  TestHeadHeavy100:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy200
-                States:
-                  TargetHeadHeavy200: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-200
-                    ResultPath: $.tableName                      
-                    Next: SetPeak200
-                  SetPeak200:
-                    Type: Pass
-                    Result: 200
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy200
-                  TestHeadHeavy200:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy300
-                States:
-                  TargetHeadHeavy300: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-300
-                    ResultPath: $.tableName                      
-                    Next: SetPeak300
-                  SetPeak300:
-                    Type: Pass
-                    Result: 300
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy300
-                  TestHeadHeavy300:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy500
-                States:
-                  TargetHeadHeavy500: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-500
-                    ResultPath: $.tableName                      
-                    Next: SetPeak500
-                  SetPeak500:
-                    Type: Pass
-                    Result: 500
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy500
-                  TestHeadHeavy500:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy700
-                States:
-                  TargetHeadHeavy700: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-700
-                    ResultPath: $.tableName                      
-                    Next: SetPeak700
-                  SetPeak700:
-                    Type: Pass
-                    Result: 700
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy700
-                  TestHeadHeavy700:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy900
-                States:
-                  TargetHeadHeavy900: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-900
-                    ResultPath: $.tableName                      
-                    Next: SetPeak900
-                  SetPeak900:
-                    Type: Pass
-                    Result: 900
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy900
-                  TestHeadHeavy900:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy1100
-                States:
-                  TargetHeadHeavy1100: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-1100
-                    ResultPath: $.tableName                      
-                    Next: SetPeak1100
-                  SetPeak1100:
-                    Type: Pass
-                    Result: 1100
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy1100
-                  TestHeadHeavy1100:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy1300
-                States:
-                  TargetHeadHeavy1300: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-1300
-                    ResultPath: $.tableName
-                    Next: SetPeak1300
-                  SetPeak1300:
-                    Type: Pass
-                    Result: 1300
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy1300
-                  TestHeadHeavy1300:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy1500
-                States:
-                  TargetHeadHeavy1500: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-1500
-                    ResultPath: $.tableName
-                    Next: SetPeak1500
-                  SetPeak1500:
-                    Type: Pass
-                    Result: 1500
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy1500
-                  TestHeadHeavy1500:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy1750
-                States:
-                  TargetHeadHeavy1750: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-1750
-                    ResultPath: $.tableName
-                    Next: SetPeak1750
-                  SetPeak1750:
-                    Type: Pass
-                    Result: 1750
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy1750
-                  TestHeadHeavy1750:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy2000
-                States:
-                  TargetHeadHeavy2000: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-2000
-                    ResultPath: $.tableName
-                    Next: SetPeak2000
-                  SetPeak2000:
-                    Type: Pass
-                    Result: 2000
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy2000
-                  TestHeadHeavy2000:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy2500
-                States:
-                  TargetHeadHeavy2500: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-2500
-                    ResultPath: $.tableName
-                    Next: SetPeak2500
-                  SetPeak2500:
-                    Type: Pass
-                    Result: 2500
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy2500
-                  TestHeadHeavy2500:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-              - StartAt: TargetHeadHeavy3000
-                States:
-                  TargetHeadHeavy3000: 
-                    Type: Pass
-                    Result: ondemand-head-heavy-3000
-                    ResultPath: $.tableName
-                    Next: SetPeak3000
-                  SetPeak3000:
-                    Type: Pass
-                    Result: 3000
-                    ResultPath: $.peak
-                    Next: TestHeadHeavy3000
-                  TestHeadHeavy3000:
-                    Type: Task
-                    Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${self:provider.stage}-generate-head-heavy-load
-                    End: true
-            End: true
-
-resources:
-  Resources:
-    Linear100:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-100
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear200:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-200
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear300:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-300
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear700:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-700
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear900:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-900
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear1100:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-1100
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear1300:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-1300
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear1500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-1500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear1750:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-1750
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear2000:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-2000
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear2500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-2500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    Linear3000:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-linear-3000
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy100:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-100
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy200:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-200
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy300:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-300
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy700:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-700
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy900:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-900
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy1100:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-1100
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy1300:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-1300
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy1500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-1500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy1750:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-1750
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy2000:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-2000
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy2500:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-2500
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH
-
-    HeadHeavy3000:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ondemand-head-heavy-3000
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: id
-            AttributeType: S
-        KeySchema:        
-          - AttributeName: id
-            KeyType: HASH

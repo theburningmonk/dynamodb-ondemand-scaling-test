@@ -14,12 +14,7 @@ const putItems = async (tableName, count) => {
         }
       }
 
-      //console.log(`saving batch of [${batch.length}]`)
-
-      const resp = await dynamodb.batchWrite(req).promise()
-      if (!_.isEmpty(resp.UnprocessedItems)) {
-        console.log(`mm... ${resp.UnprocessedItems.length} items failed`)
-      }
+      await dynamodb.batchWrite(req).promise()
     } catch (exn) {
       console.log(exn)
     }
@@ -41,8 +36,6 @@ const putItems = async (tableName, count) => {
   const tasks = chunks.map(batchWrite)
 
   await Promise.all(tasks)
-
-  //console.log(`finished saving [${items.length}] items`)
 
   let end = Date.now()
   let duration = end - start
@@ -84,7 +77,7 @@ module.exports = async (input, context, tickToItemCount) => {
     return
   }
 
-  while (context.getRemainingTimeInMillis() > 2000) {
+  while (context.getRemainingTimeInMillis() > 10000) {
     try {
       let count = tickToItemCount(tick)
       await putItems(tableName, count)
